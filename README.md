@@ -10,5 +10,6 @@
 
 ____________________________________
 1. source myenv/bin/activate (deactivate)
-2. pip install -r requirements.txt
-3. python app.py
+2. pip freeze > requirements.txt 
+3. pip install -r requirements.txt
+4. python app.py
