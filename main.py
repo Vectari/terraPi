@@ -6,7 +6,6 @@ import time
 def main():
     print("Aplikacja terrarium uruchomiona.")
     
-    # Inicjalizacja komponentów
     status_led = LEDIndicator(pin=17)
     temp_sensor = TemperatureSensor()
     display = Display()
@@ -15,15 +14,14 @@ def main():
 
     try:
         while True:
-            # Tu w przyszłości będą inne komponenty i logika
-            data = temp_sensor.read()
-            temp = data['temperature']
-            print(f"Temperatura: {temp}°C")
+            temps = temp_sensor.read_all()
+            print(f"Temperatury: {temps}")
 
-            if temp is not None:
-                display.show_text(f"Temp: {temp}°C")
-            else:
-                display.show_text("Brak odczytu")
+            # Formatowanie temperatur
+            t1 = f"{temps[0]}°C" if temps[0] is not None else "---"
+            t2 = f"{temps[1]}°C" if len(temps) > 1 and temps[1] is not None else "---"
+
+            display.show_text(f"T1: {t1}\nT2: {t2}")
             time.sleep(5)
 
     except KeyboardInterrupt:

@@ -1,28 +1,46 @@
-# components/temperature_sensor.py
-
 import os
 import glob
 
 class TemperatureSensor:
     def __init__(self):
         base_dir = '/sys/bus/w1/devices/'
-        device_folders = glob.glob(base_dir + '28*')  # DS18B20 zawsze zaczyna się od 28
-        if not device_folders:
-            raise RuntimeError("Nie znaleziono czujnika DS18B20.")
-        self.device_file = os.path.join(device_folders[0], 'w1_slave')
+        self.device_files = [
+            os.path.join(folder, 'w1_slave')
+            for folder in glob.glob(base_dir + '28*')
+        ]
+        if not self.device_files:
+            raise RuntimeError("Nie znaleziono żadnych czujników DS18B20.")
 
-    def _read_raw(self):
-        with open(self.device_file, 'r') as f:
-            return f.readlines()
+    def _read_raw(self, device_file):
+        try:
+            with open(device_file, 'r') as f:
+                return f.readlines()
+        except IOError:
+            return []
 
-    def read(self):
-        lines = self._read_raw()
-        if lines[0].strip()[-3:] != 'YES':
-            return {'temperature': None}
+    def _read_single(self, device_file):
+        try:
+            lines = self._read_raw(device_file)
+            if len(lines) < 2:
+                return None
 
-        equals_pos = lines[1].find('t=')
-        if equals_pos != -1:
-            temp_string = lines[1][equals_pos + 2:]
-            temp_c = float(temp_string) / 1000.0
-            return {'temperature': round(temp_c, 1)}
-        return {'temperature': None}
+            if lines[0].strip()[-3:] != 'YES':
+                return None
+
+            equals_pos = lines[1].find('t=')
+            if equals_pos != -1:
+                temp_string = lines[1][equals_pos + 2:]
+                return round(float(temp_string) / 1000.0, 1)
+        except (IndexError, ValueError):
+            return None
+
+        return None
+
+    def read_all(self):
+        results = []
+        for i, df in enumerate(self.device_files):
+            temp = self._read_single(df)
+            if temp is None:
+                print(f"Błąd odczytu z czujnika {i}")
+            results.append(temp)
+        return results
