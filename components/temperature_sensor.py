@@ -24,5 +24,5 @@ class TemperatureSensor:
         if equals_pos != -1:
             temp_string = lines[1][equals_pos + 2:]
             temp_c = float(temp_string) / 1000.0
-            return {'temperature': round(temp_c, 2)}
+            return {'temperature': round(temp_c, 1)}
         return {'temperature': None}
